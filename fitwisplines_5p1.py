@@ -169,7 +169,7 @@ def fitsingle(zinit,restlam,ll,lf,lfe):
     zerr=math.sqrt(math.fabs(covparams[3][3]))
     return [flux,fluxerr,fwhm,fwhmerr,z,zerr,ew,ewerr,bestparams]
 
-def plotthem(full_l,full_f,z,fit_l,fit_f,xr1,xr2,yrmin=-1.0,yr2=-1.0,name):
+def plotthem(full_l,full_f,z,fit_l,fit_f,xr1,xr2,name,yrange=[],g141only=False):
     
     #lines=[1216.0,3727.0,4341.0,4861.0,4959.0,5007.0,6563.0,6724.0,9069.0,9532.0,10830.0,10940.0,12600.0,12810.0]
     lines=[1216.0,3727.0,4861.0,4959.0,5007.0,6563.0,6724.0,9069.0,9532.0,10830.0]
@@ -178,6 +178,20 @@ def plotthem(full_l,full_f,z,fit_l,fit_f,xr1,xr2,yrmin=-1.0,yr2=-1.0,name):
     fullf=np.array(full_f)
     
     prange=[min(full_l),max(full_l)]
+    if yrange==[] or len(yrange)!=2:
+        if g141only==True:
+            maskl=np.logical_and(fulll>11000.,fulll<16750.)
+        else:
+            maskl=np.logical_and(fulll>8000.,fulll<16750.)
+        yrange=[min(fullf[maskl]),max(fullf[maskl])]
+        if yrange[0]<0:
+            yrange[0]=yrange[0]*1.15
+        else:
+            yrange[0]=yrange[0]*0.85
+        if yrange[1]<0:
+            yrange[1]=yrange[1]*0.85
+        else:
+            yrange[1]=yrange[1]*1.15
     
     plt.ion()
     plt.figure(1,figsize=(11,5))
@@ -193,6 +207,7 @@ def plotthem(full_l,full_f,z,fit_l,fit_f,xr1,xr2,yrmin=-1.0,yr2=-1.0,name):
     plt.axvline(x=xr1,ymin=0,ymax=1,hold=None,color='b',linestyle='-.', linewidth=1.5)
     plt.axvline(x=xr2,ymin=0,ymax=1,hold=None,color='b',linestyle='-.', linewidth=1.5)
     plt.xlim(prange)
+    plt.ylim(yrange)
     plt.xlabel(r'$\lambda_{obs}$ ($\AA$)',size='xx-large')
     plt.ylabel(r'$F_{\lambda}$ ($ergs/s/cm^2/\AA$)',size='xx-large')
     plt.title(name)
@@ -399,6 +414,9 @@ def go(linelist=' ',outfile=' '):
             specf2=np.array(spectrumf)
             pltrang=(specl2 > 11000.) & (specl2 < 16700.)
             fullspecrange=[min(specl2[pltrang]),max(specl2[pltrang])]
+            isG141only=True
+        else:
+            isG141only=False
 
         k=0
         custrange=0
@@ -410,7 +428,7 @@ def go(linelist=' ',outfile=' '):
             if custrange==0:
                 frange=findrange(emlines[k],zinits[j])
             if k==0:
-                plotthem(spectruml,spectrumf,zinits[j],fitlams,resultf,frange[0],frange[1],specpath)
+                plotthem(spectruml,spectrumf,zinits[j],fitlams,resultf,frange[0],frange[1],specpath,g141only=isG141only)
             if emlines[k]*(1.0+zinits[j])<fullspecrange[0] or emlines[k]*(1.0+zinits[j])>fullspecrange[1]:
                 k=k+1
                 continue
@@ -537,7 +555,7 @@ def go(linelist=' ',outfile=' '):
                     resultf.append(lingauss(fitlams[h],emlines[k],fparams))
             print fdoub,emlinenames[k]
             if (emlinenames[k]!='OIII_4959+5007' and emlinenames[k]!='SII') or (skipO3==0 and emlinenames[k]=='OIII_4959+5007') or (skipS2==0 and emlinenames[k]=='SII'):
-                plotthem(spectruml,spectrumf,zinits[j],fitlams,resultf,frange[0],frange[1],specpath)
+                plotthem(spectruml,spectrumf,zinits[j],fitlams,resultf,frange[0],frange[1],specpath,g141only=isG141only)
             print "Fit S/N for %s is %f" % (emlinenames[k],(fluxline/efluxline))
             fsave=' '
             while len(fsave)==0 or (fsave[0]!='s' and fsave[0]!='r' and fsave[0]!='w'):
