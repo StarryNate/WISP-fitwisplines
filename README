@@ -1,0 +1,6 @@
+README for fitwisplines version 5.1: the emission-line fitting code for 
+the WISP team.
+This version now has optional (instead of mandatory) user-specified 
+input and output line list files.
+In this version, amplitudes of the gaussian line profiles are forced to be 
+positive (or zero).
